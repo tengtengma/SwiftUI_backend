@@ -6,5 +6,5 @@ public record LoginDto(string Username, string Password);
 public record AuthResponseDto(
     int Id,
     string Username,
-    string Token
+    string Token = ""
 );

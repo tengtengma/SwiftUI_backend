@@ -40,10 +40,18 @@ public class AuthController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(user);
+        _db.Users.Add(new User
+        {
+            Username = registerDto.Username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
+            CreatedAt = DateTime.UtcNow
+        });
         await _db.SaveChangesAsync();
 
-        return Ok(new { user.Id, user.Username, user.CreatedAt, message = "User registered successfully." });
+        return Ok(ApiResponseDto<AuthResponseDto>.Success(new AuthResponseDto(
+            user.Id,
+            user.Username
+        ), "register successful"));
     }
 
     [HttpPost("login")]
@@ -55,9 +63,11 @@ public class AuthController : ControllerBase
             return Unauthorized("Invalid username or password.");
         }
 
-        var token = GenerateJwtToken(user);
-
-        return Ok(new { token, message = "Login successful." });
+        return Ok(ApiResponseDto<AuthResponseDto>.Success(new AuthResponseDto(
+            user.Id,
+            user.Username,
+            GenerateJwtToken(user)
+        ), "login successful"));
     }
 
     private string GenerateJwtToken(User user)
@@ -69,7 +79,8 @@ public class AuthController : ControllerBase
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+        //var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
