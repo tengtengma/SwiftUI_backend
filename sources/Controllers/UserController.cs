@@ -41,9 +41,7 @@ public class UserController : ControllerBase
         {
             return NotFound("User not found.");
         }
-
-        var userProfileDto = new UserProfileDto(user.Id, user.Username, user.CreatedAt);
-        return Ok(userProfileDto);
+        return Ok(ApiResponseDto<UserProfileDto>.Success(new UserProfileDto(user.Id, user.Username, user.CreatedAt), "User profile retrieved successfully."));
     }
 }
 
