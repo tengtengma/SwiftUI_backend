@@ -40,12 +40,7 @@ public class AuthController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        _db.Users.Add(new User
-        {
-            Username = registerDto.Username,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password),
-            CreatedAt = DateTime.UtcNow
-        });
+        _db.Users.Add(user);
         await _db.SaveChangesAsync();
 
         return Ok(ApiResponseDto<AuthResponseDto>.Success(new AuthResponseDto(
