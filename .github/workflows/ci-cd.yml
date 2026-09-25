@@ -1,0 +1,43 @@
+name: .NET 10 & Docker CI/CD Pipeline
+
+# 1. 触发条件：当代码推送到 main/master 分支，或者提交 Pull Request 时自动触发
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # 阶段 1：C# 代码编译与单元测试 (CI)
+  build-and-test:
+    name: 1. 代码编译与测试 (CI)
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 拉取仓库最新代码
+      uses: actions/checkout@v4
+
+    - name: 配置 .NET 10 SDK 环境
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: 还原依赖包 (dotnet restore)
+      run: dotnet restore
+
+    - name: 编译项目 (dotnet build)
+      run: dotnet build --no-restore --configuration Release
+
+  # 阶段 2：Docker 镜像打包构建验证 (CD)
+  docker-build:
+    name: 2. Docker 镜像构建验证 (CD)
+    needs: build-and-test  # 只有在 CI 编译通过后才开始构建 Docker
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 拉取仓库最新代码
+      uses: actions/checkout@v4
+
+    - name: 执行 Docker 镜像构建
+      run: |
+        docker build -t swiftui-backend-demo:${{ github.sha }} .
