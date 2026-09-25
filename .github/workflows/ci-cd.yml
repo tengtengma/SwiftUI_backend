@@ -6,6 +6,7 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
+  workflow_dispatch: # 允许在 GitHub 控制台手动一键运行
 
 jobs:
   # 阶段 1：C# 代码编译与单元测试 (CI)
@@ -28,16 +29,32 @@ jobs:
     - name: 编译项目 (dotnet build)
       run: dotnet build --no-restore --configuration Release
 
-  # 阶段 2：Docker 镜像打包构建验证 (CD)
-  docker-build:
-    name: 2. Docker 镜像构建验证 (CD)
-    needs: build-and-test  # 只有在 CI 编译通过后才开始构建 Docker
+  # 阶段 2：构建 Docker 镜像并推送至 AWS ECR (CD)
+  docker-build-and-push:
+    name: 2. Docker 镜像构建与推送 (CD)
+    needs: build-and-test  # 只有在 CI 编译通过后才开始构建与推送
     runs-on: ubuntu-latest
 
     steps:
     - name: 拉取仓库最新代码
       uses: actions/checkout@v4
 
-    - name: 执行 Docker 镜像构建
+    - name: 配置 AWS 凭证
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: 登录 Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: 构建并推送镜像至 ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+        IMAGE_TAG: latest
       run: |
-        docker build -t swiftui-backend-demo:${{ github.sha }} .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
