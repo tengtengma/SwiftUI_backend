@@ -47,3 +47,5 @@ Thumbs.db
 ## 5. Docker Resources
 ## ==========================================
 .dockerdata/
+/appsettings.json
+/docker-compose.yml
