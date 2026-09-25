@@ -10,12 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. 添加 Controllers 与 .NET 10 原生 OpenApi
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpClient();
 
 // 2. 配置 DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. 配置 JWT 认证
+// 3. 配置 Redis 缓存服务
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    options.InstanceName = "SwiftUINews_";
+});
+
+// 4. 配置 JWT 认证
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

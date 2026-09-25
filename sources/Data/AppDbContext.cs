@@ -11,4 +11,6 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; } = null!;
+
+    public DbSet<Article> Articles { get; set; } = null!;
 }
