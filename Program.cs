@@ -43,15 +43,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 
 // 4. 开发环境下挂载原生的 OpenAPI 文档与 Scalar 调试 UI
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     app.MapOpenApi();
     app.MapScalarApiReference(options =>
     {
         options.Title = "SwiftUI Backend API (.NET 10)";
         options.WithTheme(ScalarTheme.Purple);
     });
-}
+// }
 
 app.UseAuthentication(); // 认证（你是谁）
 app.UseAuthorization();  // 授权（你能做什么）
